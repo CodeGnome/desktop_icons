@@ -20,27 +20,34 @@ class DesktopIcons
   HIDE = false
   SHOW = true
 
+  # Define error 71 from exits.h as an exception class, for use when not on a
+  # Darwin OS system.
   class EX_OSERR_71 < NotImplementedError
     def initialize msg="not macOS"
       super
     end
   end
 
+  # @raise [EX_OSERR_71] when not running on macOS.
   def initialize
     raise EX_OSERR_71 unless macOS?
   end
 
+  # Hide desktop icons.
   def hide
     desktop_icons HIDE
   end
 
+  # Show desktop icons.
   def show
     desktop_icons SHOW
   end
 
+  # Toggle state of desktop icons.
   def toggle
     toggle_icon_display
     restart_finder
+    icons_showing?
   end
 
   private
@@ -69,11 +76,14 @@ class DesktopIcons
     system 'pkill Finder'
   end
 
+  # @param [Boolean] bool sets whether to show the icons
+  # @returns [Boolean] newly-set state of desktop icons
   def desktop_icons bool
     return if icons_showing? == bool
     cmd  = %w[defaults write com.apple.finder CreateDesktop] << bool
     system cmd.join " "
     restart_finder
+    icons_showing?
   end
 end
 
